@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal Predictor 10x5</title>
+    <title>Goal Predictor AI V56</title>
     <style>
         :root {
             --bg: #121212;
             --card: #1c1c1e;
             --pitch-green: #c5e1a5;
             --btn-green: #2ecc71;
+            --mine-red: #e74c3c;
         }
 
         body {
@@ -29,20 +30,20 @@
             border-radius: 15px;
             padding: 15px;
             border: 1px solid #333;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
         }
 
         .status-header {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #888;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
-        /* Seed Input Area */
         .input-group {
             background: #000;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             margin-bottom: 15px;
             border: 1px solid #444;
@@ -58,18 +59,17 @@
             font-size: 0.9rem;
         }
 
-        /* Terrain Grid (10 Columns x 5 Rows) */
         .pitch {
             background: #222;
-            padding: 8px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 15px;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(10, 1fr); /* 10 columns */
-            gap: 4px;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
         }
 
         .cell {
@@ -79,15 +79,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 0.8rem;
             transition: 0.2s;
         }
 
-        /* Ballon Style */
+        /* Styling ny Ballon */
         .cell.ball {
             background: #fff;
-            box-shadow: 0 0 12px var(--btn-green);
+            box-shadow: 0 0 10px var(--btn-green);
             transform: scale(1.05);
+            z-index: 2;
+        }
+
+        /* Styling ny Mine */
+        .cell.mine {
+            background: #333;
+            box-shadow: 0 0 8px var(--mine-red);
+            opacity: 0.8;
         }
 
         .btn-predict {
@@ -96,21 +104,20 @@
             border: none;
             width: 100%;
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: bold;
             font-size: 1rem;
             cursor: pointer;
             text-transform: uppercase;
         }
 
-        .btn-predict:active { transform: scale(0.97); }
-
-        .footer {
-            text-align: center;
-            font-size: 0.6rem;
-            color: #555;
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
             margin-top: 15px;
-            letter-spacing: 1px;
+            font-size: 0.7rem;
+            color: #aaa;
         }
     </style>
 </head>
@@ -118,27 +125,28 @@
 
 <div class="app-container">
     <div class="status-header">
-        <span id="liveTime">26/03/2026 | 21:05</span>
-        <span style="color: var(--btn-green)">● GOAL BFS V55</span>
+        <span id="liveTime">26/03/2026 | 21:35</span>
+        <span style="color: var(--btn-green)">● GOAL AI V56</span>
     </div>
 
     <div class="input-group">
-        <input type="text" id="clientSeed" placeholder="Ampidiro eto ny Client Seed..." value="ty3GdzNIYM5XXytRaxu6">
+        <input type="text" id="clientSeed" placeholder="Apetaho ny Client Seed..." value="ty3GdzNIYM5XXytRaxu6">
     </div>
 
     <div class="pitch">
         <div class="grid" id="grid"></div>
     </div>
 
-    <button class="btn-predict" onclick="runPredictor()">⚡ Lancer Prediction (10x5)</button>
+    <button class="btn-predict" onclick="runPredictor()">⚡ Analyser Terrain (10x5)</button>
 
-    <div class="footer">
-        DETERMINISTIC ALGORITHM | EDIT WITH ❤ LOVABLE
+    <div class="legend">
+        <span>⚽ = Sûre</span>
+        <span>💣 = Danger (Mine)</span>
     </div>
 </div>
 
 <script>
-    const rows = 5; // Natao 5 izao
+    const rows = 5;
     const cols = 10;
     const gridDiv = document.getElementById('grid');
 
@@ -157,32 +165,38 @@
 
         const cells = document.querySelectorAll('.cell');
         cells.forEach(c => {
-            c.classList.remove('ball');
+            c.classList.remove('ball', 'mine');
             c.innerText = '';
         });
 
-        // Lojika ho an'ny columns 10
+        // Loop isaky ny colonne 10
         for (let c = 0; c < cols; c++) {
             setTimeout(() => {
-                // Algoritma miankina amin'ny Seed
                 let hash = 0;
                 for (let i = 0; i < seed.length; i++) {
                     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
                 }
                 
-                // Mifidy tsara ny toerana (Row 0 ka hatramin'ny 4)
-                let targetRow = Math.abs(hash + (c * 13)) % rows;
-                let index = (targetRow * cols) + c;
+                // 1. Kajy ny toerana hisy ny Baolina (Safe)
+                let ballRow = Math.abs(hash + (c * 17)) % rows;
+                let ballIndex = (ballRow * cols) + c;
                 
-                if (cells[index]) {
-                    cells[index].classList.add('ball');
-                    cells[index].innerText = '⚽';
-                }
+                // 2. Kajy ny toerana hisy ny Mine (Danger) - tsy maintsy hafa noho ny baolina
+                let mineRow = Math.abs(hash + (c * 31) + 7) % rows;
+                if (mineRow === ballRow) mineRow = (ballRow + 1) % rows;
+                let mineIndex = (mineRow * cols) + c;
+                
+                // Asehoy ny Baolina
+                cells[ballIndex].classList.add('ball');
+                cells[ballIndex].innerText = '⚽';
+
+                // Asehoy ny Mine
+                cells[mineIndex].classList.add('mine');
+                cells[mineIndex].innerText = '💣';
             }, c * 100);
         }
     }
 
-    // Update Time
     function updateTime() {
         const now = new Date();
         document.getElementById('liveTime').innerText = now.toLocaleString('fr-FR');
