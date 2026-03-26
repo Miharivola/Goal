@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="mg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor Pro V50</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #f39c12; /* Gold loko toy ny amin'ny sary */
+            --text: #ffffff;
+            --border: #333;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .header { margin-bottom: 20px; font-weight: bold; font-size: 1.2rem; }
+
+        /* Grid 4x7 araka ny sary */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            background: #111;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: #2a2a2a;
+            border-radius: 6px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell.safe {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 1px solid var(--border);
+            color: var(--primary);
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">PREDICTOR BFS DETERMINISTE</div>
+
+    <div class="input-group">
+        <label>Seed du Client:</label>
+        <input type="text" id="clientSeed" placeholder="Ampidiro ny seed...">
+    </div>
+
+    <div class="grid" id="gameGrid">
+        </div>
+
+    <button class="btn-predict" onclick="generatePrediction()">Lancer Prediction</button>
+
+    <div class="stats">
+        <span>Côte Moyen: <b id="coteMoyen">1.50x</b></span>
+        <span>Côte Max: <b id="coteMax">5.20x</b></span>
+    </div>
+</div>
+
+<script>
+    const grid = document.getElementById('gameGrid');
+    const totalCells = 28; // 4x7 grid
+
+    // 1. Mamorona ny Grid amin'ny voalohany
+    function initGrid() {
+        grid.innerHTML = '';
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            grid.appendChild(cell);
+        }
+    }
+
+    // 2. Lojika "Deterministic" fakana ny kintana
+    function generatePrediction() {
+        const seed = document.getElementById('clientSeed').value;
+        if (!seed) {
+            alert("Ampidiro aloha ny Seed!");
+            return;
+        }
+
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(c => c.classList.remove('safe'));
+
+        // Algoritma tsotra miankina amin'ny halavan'ny seed sy ny kisendrasendra
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // Mifidy "Cases sûres" 5 ka hatramin'ny 7
+        let count = 0;
+        let attempts = 0;
+        while (count < 6 && attempts < 50) {
+            let index = Math.abs((hash + attempts * 7) % totalCells);
+            if (!cells[index].classList.contains('safe')) {
+                cells[index].classList.add('safe');
+                count++;
+            }
+            attempts++;
+        }
+
+        // Fanovana ny Côte amin'ny fomba kisendrasendra kely
+        document.getElementById('coteMoyen').innerText = (1.2 + Math.random()).toFixed(2) + "x";
+        document.getElementById('coteMax').innerText = (3 + Math.random() * 5).toFixed(2) + "x";
+    }
+
+    initGrid();
+</script>
+
+</body>
+</html>
