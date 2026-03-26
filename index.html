@@ -3,177 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal Predictor Pro</title>
+    <title>Predictor Goal BFS</title>
     <style>
+        :root {
+            --bg: #121212;
+            --card: #1c1c1e;
+            --gold: #f39c12;
+            --gray: #2c2c2e;
+        }
+
         body {
-            background-color: #0b1a0b; /* Maitso antitra toy ny lalao */
+            background: var(--bg);
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
             padding: 20px;
             margin: 0;
         }
 
-        .app-card {
-            background: #1a1a1a;
-            border: 2px solid #2ecc71;
-            border-radius: 15px;
-            padding: 20px;
-            width: 320px;
-            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+        .app-window {
+            background: var(--card);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid #333;
         }
 
-        .header {
-            text-align: center;
-            font-weight: bold;
-            color: #2ecc71;
+        /* Top Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
             margin-bottom: 15px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
         }
 
-        /* Ny Grid Goal: 7 columns x 4 rows */
-        .goal-grid {
+        /* Grid 4x7 */
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            background: #0f2b0f;
-            padding: 10px;
-            border-radius: 8px;
+            gap: 6px;
+            background: #000;
+            padding: 12px;
+            border-radius: 12px;
             margin-bottom: 20px;
         }
 
         .cell {
-            aspect-ratio: 1/1.2;
-            background: #2d5a2d;
+            aspect-ratio: 1;
+            background: #262626;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            transition: 0.3s;
+            font-size: 0.8rem;
         }
 
-        /* Rehefa misy kintana (prediction) */
-        .cell.win {
-            background: #f1c40f; /* Loko volamena */
-            box-shadow: inset 0 0 10px #000;
-            animation: pulse 1s infinite;
+        .cell.active {
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+            color: black;
+            font-weight: bold;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        input {
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #000;
-            color: #2ecc71;
-            font-family: monospace;
-        }
-
-        .btn {
-            background: #2ecc71;
+        /* Button "Lancer BFS" */
+        .btn-main {
+            background: linear-gradient(to bottom, #f39c12, #d35400);
             color: black;
             border: none;
-            padding: 15px;
-            border-radius: 8px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
             font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .btn:active { transform: scale(0.98); }
-
-        .footer-info {
-            margin-top: 15px;
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             display: flex;
-            justify-content: space-between;
-            color: #888;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
         }
+
+        /* Clavier/Input section */
+        .input-box {
+            background: #111;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+        }
+
+        .seed-display {
+            color: var(--gold);
+            word-break: break-all;
+            font-family: monospace;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .footer-logo {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #555;
+        }
+        
+        .footer-logo span { color: #ff4d4d; }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <div class="header">GOAL PREDICTOR AI</div>
-
-    <div class="controls">
-        <input type="text" id="seedInput" placeholder="Ampidiro ny Client Seed...">
-        <div class="goal-grid" id="grid"></div>
-        <button class="btn" onclick="predictPath()">Hitaiza ny lalana (Predict)</button>
+<div class="app-window">
+    <div class="status-bar">
+        <span>26/03/2026 | 18:20</span>
+        <span style="color: var(--gold)">● Moyen</span>
     </div>
 
-    <div class="footer-info">
-        <span>Mode: BFS Determinist</span>
-        <span id="time">17:50</span>
+    <div class="input-box">
+        <label>Client Seed actif :</label>
+        <span id="displaySeed" class="seed-display">ty3GdzNIYM5XXytRaxu6...</span>
+    </div>
+
+    <div class="grid-container" id="grid"></div>
+
+    <button class="btn-main" onclick="runBFS()">
+        ⚡ Lancer BFS Déterministe
+    </button>
+
+    <div class="footer-logo">
+        Edit with <span>❤</span> Lovable
     </div>
 </div>
 
 <script>
+    const grid = document.getElementById('grid');
     const rows = 4;
     const cols = 7;
-    const gridElement = document.getElementById('grid');
 
-    // Mamorona ny Grid 4x7
-    function createGrid() {
-        gridElement.innerHTML = '';
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.id = `cell-${r}-${c}`;
-                gridElement.appendChild(cell);
-            }
+    // 1. Create Grid
+    function init() {
+        grid.innerHTML = '';
+        for (let i = 0; i < rows * cols; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            grid.appendChild(cell);
         }
     }
 
-    function predictPath() {
-        const seed = document.getElementById('seedInput').value;
-        if(!seed) { alert("Ampidiro ny Seed!"); return; }
-
-        // Diovina ny grid
-        document.querySelectorAll('.cell').forEach(c => {
-            c.classList.remove('win');
+    // 2. BFS Simulation Logic
+    function runBFS() {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(c => {
+            c.classList.remove('active');
             c.innerText = '';
         });
 
-        // Lojika faminaniana isaky ny colonne (1 kintana isaky ny colonne)
+        // Mifidy lalana 1 isaky ny colonne (7 columns)
         for (let c = 0; c < cols; c++) {
-            // Mampiasa ny seed mba hifidianana laharana (row) 0 hatramin'ny 3
-            let charCode = seed.charCodeAt(c % seed.length) || 5;
-            let targetRow = (charCode + c) % rows;
-            
-            const targetCell = document.getElementById(`cell-${targetRow}-${c}`);
-            targetCell.classList.add('win');
-            targetCell.innerText = '⭐';
+            setTimeout(() => {
+                let randomRow = Math.floor(Math.random() * rows);
+                let index = (randomRow * cols) + c;
+                cells[index].classList.add('active');
+                cells[index].innerText = '⭐';
+                
+                // Audio effect kely raha tianao (optional)
+                // new Audio('click.mp3').play();
+            }, c * 150); // Misy "animation" kely mandeha isaky ny tsanganana
         }
     }
 
-    // Famantaranandro 24h
-    function updateClock() {
-        const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
-                        now.getMinutes().toString().padStart(2, '0');
-        document.getElementById('time').innerText = timeStr;
-    }
-
-    setInterval(updateClock, 1000);
-    createGrid();
-    updateClock();
+    init();
 </script>
 
 </body>
