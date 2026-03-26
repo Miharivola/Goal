@@ -3,172 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictor Pro V50</title>
+    <title>Goal Predictor Pro</title>
     <style>
-        :root {
-            --bg-dark: #121212;
-            --card-bg: #1e1e1e;
-            --primary: #f39c12; /* Gold loko toy ny amin'ny sary */
-            --text: #ffffff;
-            --border: #333;
-        }
-
         body {
-            background-color: var(--bg-dark);
-            color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0b1a0b; /* Maitso antitra toy ny lalao */
+            color: white;
+            font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            padding: 20px;
             margin: 0;
         }
 
-        .container {
-            background: var(--card-bg);
-            padding: 20px;
+        .app-card {
+            background: #1a1a1a;
+            border: 2px solid #2ecc71;
             border-radius: 15px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
         }
 
-        .header { margin-bottom: 20px; font-weight: bold; font-size: 1.2rem; }
+        .header {
+            text-align: center;
+            font-weight: bold;
+            color: #2ecc71;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
 
-        /* Grid 4x7 araka ny sary */
-        .grid {
+        /* Ny Grid Goal: 7 columns x 4 rows */
+        .goal-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin: 20px 0;
-            background: #111;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background: #0f2b0f;
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
 
         .cell {
-            aspect-ratio: 1;
-            background: #2a2a2a;
-            border-radius: 6px;
-            transition: 0.3s;
+            aspect-ratio: 1/1.2;
+            background: #2d5a2d;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.2rem;
+            transition: 0.3s;
         }
 
-        .cell.safe {
-            background: var(--primary);
-            box-shadow: 0 0 15px var(--primary);
+        /* Rehefa misy kintana (prediction) */
+        .cell.win {
+            background: #f1c40f; /* Loko volamena */
+            box-shadow: inset 0 0 10px #000;
+            animation: pulse 1s infinite;
         }
 
-        .input-group {
-            text-align: left;
-            margin-bottom: 15px;
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         input {
-            width: 100%;
-            padding: 10px;
-            background: #000;
-            border: 1px solid var(--border);
-            color: var(--primary);
+            padding: 12px;
             border-radius: 5px;
-            box-sizing: border-box;
+            border: 1px solid #444;
+            background: #000;
+            color: #2ecc71;
             font-family: monospace;
         }
 
-        .btn-predict {
-            width: 100%;
-            padding: 15px;
-            background: var(--primary);
+        .btn {
+            background: #2ecc71;
+            color: black;
             border: none;
-            color: #000;
-            font-weight: bold;
+            padding: 15px;
             border-radius: 8px;
+            font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
         }
 
-        .stats {
+        .btn:active { transform: scale(0.98); }
+
+        .footer-info {
+            margin-top: 15px;
+            font-size: 0.75rem;
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            font-size: 0.8rem;
             color: #888;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">PREDICTOR BFS DETERMINISTE</div>
+<div class="app-card">
+    <div class="header">GOAL PREDICTOR AI</div>
 
-    <div class="input-group">
-        <label>Seed du Client:</label>
-        <input type="text" id="clientSeed" placeholder="Ampidiro ny seed...">
+    <div class="controls">
+        <input type="text" id="seedInput" placeholder="Ampidiro ny Client Seed...">
+        <div class="goal-grid" id="grid"></div>
+        <button class="btn" onclick="predictPath()">Hitaiza ny lalana (Predict)</button>
     </div>
 
-    <div class="grid" id="gameGrid">
-        </div>
-
-    <button class="btn-predict" onclick="generatePrediction()">Lancer Prediction</button>
-
-    <div class="stats">
-        <span>Côte Moyen: <b id="coteMoyen">1.50x</b></span>
-        <span>Côte Max: <b id="coteMax">5.20x</b></span>
+    <div class="footer-info">
+        <span>Mode: BFS Determinist</span>
+        <span id="time">17:50</span>
     </div>
 </div>
 
 <script>
-    const grid = document.getElementById('gameGrid');
-    const totalCells = 28; // 4x7 grid
+    const rows = 4;
+    const cols = 7;
+    const gridElement = document.getElementById('grid');
 
-    // 1. Mamorona ny Grid amin'ny voalohany
-    function initGrid() {
-        grid.innerHTML = '';
-        for (let i = 0; i < totalCells; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            grid.appendChild(cell);
-        }
-    }
-
-    // 2. Lojika "Deterministic" fakana ny kintana
-    function generatePrediction() {
-        const seed = document.getElementById('clientSeed').value;
-        if (!seed) {
-            alert("Ampidiro aloha ny Seed!");
-            return;
-        }
-
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(c => c.classList.remove('safe'));
-
-        // Algoritma tsotra miankina amin'ny halavan'ny seed sy ny kisendrasendra
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-            hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-        }
-
-        // Mifidy "Cases sûres" 5 ka hatramin'ny 7
-        let count = 0;
-        let attempts = 0;
-        while (count < 6 && attempts < 50) {
-            let index = Math.abs((hash + attempts * 7) % totalCells);
-            if (!cells[index].classList.contains('safe')) {
-                cells[index].classList.add('safe');
-                count++;
+    // Mamorona ny Grid 4x7
+    function createGrid() {
+        gridElement.innerHTML = '';
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${r}-${c}`;
+                gridElement.appendChild(cell);
             }
-            attempts++;
         }
-
-        // Fanovana ny Côte amin'ny fomba kisendrasendra kely
-        document.getElementById('coteMoyen').innerText = (1.2 + Math.random()).toFixed(2) + "x";
-        document.getElementById('coteMax').innerText = (3 + Math.random() * 5).toFixed(2) + "x";
     }
 
-    initGrid();
+    function predictPath() {
+        const seed = document.getElementById('seedInput').value;
+        if(!seed) { alert("Ampidiro ny Seed!"); return; }
+
+        // Diovina ny grid
+        document.querySelectorAll('.cell').forEach(c => {
+            c.classList.remove('win');
+            c.innerText = '';
+        });
+
+        // Lojika faminaniana isaky ny colonne (1 kintana isaky ny colonne)
+        for (let c = 0; c < cols; c++) {
+            // Mampiasa ny seed mba hifidianana laharana (row) 0 hatramin'ny 3
+            let charCode = seed.charCodeAt(c % seed.length) || 5;
+            let targetRow = (charCode + c) % rows;
+            
+            const targetCell = document.getElementById(`cell-${targetRow}-${c}`);
+            targetCell.classList.add('win');
+            targetCell.innerText = '⭐';
+        }
+    }
+
+    // Famantaranandro 24h
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                        now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('time').innerText = timeStr;
+    }
+
+    setInterval(updateClock, 1000);
+    createGrid();
+    updateClock();
 </script>
 
 </body>
