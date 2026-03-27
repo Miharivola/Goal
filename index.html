@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal AI V59 - Real Algorithm</title>
+    <title>Goal AI V60 - Stable</title>
     <style>
         :root {
             --bg: #0d0d0d;
@@ -15,7 +15,7 @@
         body {
             background: var(--bg);
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: sans-serif;
             display: flex;
             justify-content: center;
             padding: 10px;
@@ -28,95 +28,71 @@
             max-width: 480px;
             border-radius: 15px;
             padding: 15px;
-            border: 1px solid #222;
+            border: 1px solid #333;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             font-size: 0.7rem;
-            color: #555;
+            color: #888;
             margin-bottom: 15px;
         }
 
         .input-box { margin-bottom: 10px; }
-
-        label {
-            font-size: 0.65rem;
-            color: #888;
-            display: block;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
+        label { font-size: 0.65rem; color: #666; display: block; margin-bottom: 4px; }
 
         input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #000;
-            border: 1px solid #333;
+            border: 1px solid #444;
             color: var(--green);
-            border-radius: 6px;
+            border-radius: 8px;
             font-family: monospace;
-            font-size: 0.8rem;
-            box-sizing: border-box;
             outline: none;
-        }
-
-        .percentage-row {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 3px;
-            margin: 15px 0 5px 0;
-        }
-
-        .percent-tag {
-            font-size: 0.55rem;
-            text-align: center;
-            color: var(--green);
-            font-weight: bold;
+            box-sizing: border-box;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
-            gap: 3px;
-            background: #111;
-            padding: 5px;
-            border-radius: 5px;
+            gap: 4px;
+            margin-top: 15px;
         }
 
         .cell {
             aspect-ratio: 1;
             background: var(--pitch);
-            border-radius: 2px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            transition: background 0.3s;
+            font-size: 1rem;
         }
 
-        .cell.ball { background: #fff; box-shadow: 0 0 8px var(--green); }
-        .cell.mine { background: #333; opacity: 0.6; }
+        .cell.ball { background: #fff; box-shadow: 0 0 10px var(--green); }
+        .cell.mine { background: #333; opacity: 0.7; }
 
         .btn-predict {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             background: var(--green);
             color: black;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: bold;
-            margin-top: 15px;
+            margin-top: 20px;
             cursor: pointer;
             text-transform: uppercase;
         }
-
-        .footer {
-            margin-top: 15px;
+        
+        #status {
             text-align: center;
-            font-size: 0.6rem;
-            color: #444;
+            font-size: 0.7rem;
+            margin-top: 10px;
+            color: var(--green);
+            height: 15px;
         }
     </style>
 </head>
@@ -124,99 +100,77 @@
 
 <div class="container">
     <div class="header">
-        <span id="date">27/03/2026</span>
-        <span style="color: var(--green)">● ALGO V59 ACTIVATED</span>
+        <span>27/03/2026</span>
+        <span style="color: var(--green)">● STABLE ENGINE V60</span>
     </div>
 
     <div class="input-box">
-        <label>Prochain seed du client :</label>
-        <input type="text" id="clientSeed" placeholder="Client Seed..." value="zVEQP74Jbv6hot8m0g8h">
+        <label>CLIENT SEED :</label>
+        <input type="text" id="cSeed" placeholder="Apetaho eto..." value="zVEQP74Jbv6hot8m0g8h">
     </div>
 
     <div class="input-box">
-        <label>Prochain seed du serveur (SHA256) :</label>
-        <input type="text" id="serverSeed" placeholder="Server Seed...">
+        <label>SERVER SEED (Optionnel) :</label>
+        <input type="text" id="sSeed" placeholder="Apetaho eto raha misy...">
     </div>
 
-    <div class="percentage-row" id="percentRow"></div>
+    <div id="status"></div>
+
     <div class="grid" id="grid"></div>
 
-    <button class="btn-predict" onclick="analyze()">⚡ ANALYSER AVEC ALGO V59</button>
-
-    <div class="footer">
-        LINEAR CONGRUENTIAL GENERATOR | ANTI-PATTERN SYSTEM
-    </div>
+    <button class="btn-predict" onclick="startAnalysis()">⚡ ANALYSER LE TERRAIN</button>
 </div>
 
 <script>
     const rows = 5, cols = 10;
     const grid = document.getElementById('grid');
-    const pRow = document.getElementById('percentRow');
 
     function init() {
         grid.innerHTML = '';
-        pRow.innerHTML = '';
         for (let i = 0; i < rows * cols; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
             grid.appendChild(cell);
         }
-        for (let i = 0; i < cols; i++) {
-            const tag = document.createElement('div');
-            tag.className = 'percent-tag';
-            tag.innerText = '--%';
-            pRow.appendChild(tag);
+    }
+
+    function startAnalysis() {
+        const cs = document.getElementById('cSeed').value.trim();
+        const ss = document.getElementById('sSeed').value.trim();
+        const status = document.getElementById('status');
+
+        if (!cs && !ss) {
+            alert("Ampidiro farafahakeliny ny seed iray!");
+            return;
         }
-    }
 
-    // Algorithm LCG ho an'ny fiparitahana tsara kokoa
-    function seededRandom(seed) {
-        let m = 0x80000000; // 2^31
-        let a = 1103515245;
-        let c = 12345;
-        seed = (a * seed + c) % m;
-        return seed / (m - 1);
-    }
-
-    function analyze() {
-        const cSeed = document.getElementById('clientSeed').value;
-        const sSeed = document.getElementById('serverSeed').value;
-        if (!cSeed || !sSeed) { alert("Fenoy ny seed roa!"); return; }
-
+        status.innerText = "Calcul de l'algorithme en cours...";
         const cells = document.querySelectorAll('.cell');
-        const tags = document.querySelectorAll('.percent-tag');
         cells.forEach(c => { c.classList.remove('ball', 'mine'); c.innerText = ''; });
 
-        // Generate a numeric seed from strings
-        let combinedStr = cSeed + sSeed;
-        let numericSeed = 0;
-        for (let i = 0; i < combinedStr.length; i++) {
-            numericSeed = (numericSeed << 5) - numericSeed + combinedStr.charCodeAt(i);
-            numericSeed |= 0; 
+        const finalSeed = cs + ss + "V60_SALT";
+        let hash = 0;
+        for (let i = 0; i < finalSeed.length; i++) {
+            hash = ((hash << 5) - hash) + finalSeed.charCodeAt(i);
+            hash |= 0;
         }
 
         for (let c = 0; c < cols; c++) {
             setTimeout(() => {
-                // Mampiasa an'ilay algorithm vaovao isaky ny colonne
-                let colSeed = numericSeed + c;
-                let rand1 = seededRandom(colSeed);
-                let rand2 = seededRandom(colSeed + 999);
+                let colHash = Math.abs(hash ^ (c * 1234567));
+                let ballRow = colHash % rows;
+                let mineRow = (colHash + 1) % rows;
 
-                // Isan-jato
-                let accuracy = Math.floor(95 + (rand1 * 4));
-                tags[c].innerText = accuracy + '%';
+                let bIdx = (ballRow * cols) + c;
+                let mIdx = (mineRow * cols) + c;
 
-                // Position (0-4)
-                let ballRow = Math.floor(rand1 * rows);
-                let mineRow = Math.floor(rand2 * rows);
-                if (mineRow === ballRow) mineRow = (ballRow + 1) % rows;
+                cells[bIdx].classList.add('ball');
+                cells[bIdx].innerText = '⚽';
+                cells[mIdx].classList.add('mine');
+                cells[mIdx].innerText = '💣';
 
-                cells[(ballRow * cols) + c].classList.add('ball');
-                cells[(ballRow * cols) + c].innerText = '⚽';
-                
-                cells[(mineRow * cols) + c].classList.add('mine');
-                cells[(mineRow * cols) + c].innerText = '💣';
-            }, c * 50);
+                if (c === cols - 1) status.innerText = "Analyse terminée !";
+            }, c * 80);
         }
     }
 
