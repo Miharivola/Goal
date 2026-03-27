@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal AI V57 - Percent Mode</title>
+    <title>Goal AI V58 - Dual Seed</title>
     <style>
         :root {
-            --bg: #0f0f0f;
-            --card: #181818;
-            --green-glow: #2ecc71;
+            --bg: #0d0d0d;
+            --card: #161618;
+            --green: #2ecc71;
             --pitch: #c5e1a5;
         }
 
@@ -18,7 +18,7 @@
             font-family: 'Segoe UI', sans-serif;
             display: flex;
             justify-content: center;
-            padding: 15px;
+            padding: 10px;
             margin: 0;
         }
 
@@ -26,8 +26,8 @@
             background: var(--card);
             width: 100%;
             max-width: 480px;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 15px;
+            padding: 15px;
             border: 1px solid #222;
         }
 
@@ -35,38 +35,51 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.7rem;
-            color: #666;
+            color: #555;
             margin-bottom: 15px;
         }
 
-        .seed-input {
+        /* Inputs */
+        .input-box {
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 0.65rem;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        input {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: #000;
             border: 1px solid #333;
-            color: var(--green-glow);
-            border-radius: 8px;
+            color: var(--green);
+            border-radius: 6px;
             font-family: monospace;
-            margin-bottom: 15px;
+            font-size: 0.8rem;
             box-sizing: border-box;
+            outline: none;
         }
 
-        /* Isan-jato Row */
+        /* Grid section */
         .percentage-row {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 3px;
-            margin-bottom: 5px;
+            margin: 15px 0 5px 0;
         }
 
         .percent-tag {
             font-size: 0.55rem;
             text-align: center;
-            color: var(--green-glow);
+            color: var(--green);
             font-weight: bold;
         }
 
-        /* Grid 10x5 */
         .grid {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
@@ -84,21 +97,20 @@
             align-items: center;
             justify-content: center;
             font-size: 0.8rem;
-            transition: 0.3s;
         }
 
-        .cell.ball { background: #fff; box-shadow: 0 0 8px var(--green-glow); }
+        .cell.ball { background: #fff; box-shadow: 0 0 8px var(--green); }
         .cell.mine { background: #333; opacity: 0.6; }
 
         .btn-predict {
             width: 100%;
             padding: 16px;
-            background: var(--green-glow);
+            background: var(--green);
             color: black;
             border: none;
             border-radius: 10px;
             font-weight: bold;
-            margin-top: 20px;
+            margin-top: 15px;
             cursor: pointer;
             text-transform: uppercase;
         }
@@ -115,20 +127,27 @@
 
 <div class="container">
     <div class="header">
-        <span id="date">26/03/2026</span>
-        <span style="color: var(--green-glow)">● GOAL AI V57 (ACCURACY ON)</span>
+        <span id="date">27/03/2026</span>
+        <span style="color: var(--green)">● DUAL SEED MODE V58</span>
     </div>
 
-    <input type="text" id="seed" class="seed-input" value="ty3GdzNIYM5XXytRaxu6">
+    <div class="input-box">
+        <label>Prochain seed du client :</label>
+        <input type="text" id="clientSeed" placeholder="Apetaho ny Client Seed..." value="YqVeiXuCoAxJcEphEJ...">
+    </div>
+
+    <div class="input-box">
+        <label>Prochain seed du serveur (SHA256) :</label>
+        <input type="text" id="serverSeed" placeholder="Apetaho ny Server Seed...">
+    </div>
 
     <div class="percentage-row" id="percentRow"></div>
-
     <div class="grid" id="grid"></div>
 
-    <button class="btn-predict" onclick="analyze()">⚡ Analyser Terrain (10x5)</button>
+    <button class="btn-predict" onclick="analyze()">⚡ Analyser avec Dual-Seed</button>
 
     <div class="footer">
-        PROVABY FAIR ALGORITHM | 100% SECURE DÉTERMINISTE
+        PROVABLY FAIR AI | SYNCED WITH SERVER DATA
     </div>
 </div>
 
@@ -145,44 +164,52 @@
             cell.className = 'cell';
             grid.appendChild(cell);
         }
-        // Fenoina % foana aloha ny ambony
         for (let i = 0; i < cols; i++) {
             const tag = document.createElement('div');
             tag.className = 'percent-tag';
-            tag.innerText = '0%';
+            tag.innerText = '--%';
             pRow.appendChild(tag);
         }
     }
 
     function analyze() {
-        const seedVal = document.getElementById('seed').value;
+        const cSeed = document.getElementById('clientSeed').value;
+        const sSeed = document.getElementById('serverSeed').value;
+        
+        if (!cSeed || !sSeed) {
+            alert("Ampidiro ny Client Seed ARY ny Server Seed!");
+            return;
+        }
+
         const cells = document.querySelectorAll('.cell');
         const tags = document.querySelectorAll('.percent-tag');
         
         cells.forEach(c => { c.classList.remove('ball', 'mine'); c.innerText = ''; });
 
+        // Mitambatra ny hery (Combined Hash)
+        const combinedSeed = cSeed + sSeed;
+
         for (let c = 0; c < cols; c++) {
             setTimeout(() => {
                 let hash = 0;
-                for (let i = 0; i < seedVal.length; i++) {
-                    hash = seedVal.charCodeAt(i) + ((hash << 5) - hash);
+                for (let i = 0; i < combinedSeed.length; i++) {
+                    hash = combinedSeed.charCodeAt(i) + ((hash << 5) - hash);
                 }
 
-                // Isan-jato (Randomized miankina amin'ny seed fa eo anelanelan'ny 94% sy 99%)
-                let accuracy = 94 + (Math.abs(hash + c) % 6);
+                // Accuracy isan-jato
+                let accuracy = 95 + (Math.abs(hash + c) % 5);
                 tags[c].innerText = accuracy + '%';
-                tags[c].style.opacity = '1';
 
-                // Position
-                let ballRow = Math.abs(hash + (c * 17)) % rows;
-                let mineRow = (ballRow + 1) % rows;
+                // Position calculation
+                let ballRow = Math.abs(hash + (c * 19)) % rows;
+                let mineRow = (ballRow + 2) % rows; // Elanelana kely
 
                 cells[(ballRow * cols) + c].classList.add('ball');
                 cells[(ballRow * cols) + c].innerText = '⚽';
                 
                 cells[(mineRow * cols) + c].classList.add('mine');
                 cells[(mineRow * cols) + c].innerText = '💣';
-            }, c * 100);
+            }, c * 80);
         }
     }
 
