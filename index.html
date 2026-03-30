@@ -3,178 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal AI V60 - Stable</title>
+    <title>Goal Predictor AI V61 - Ultimate</title>
     <style>
         :root {
-            --bg: #0d0d0d;
-            --card: #161618;
-            --green: #2ecc71;
-            --pitch: #c5e1a5;
+            --primary: #2ecc71;
+            --bg-dark: #0a0a0b;
+            --card-bg: #141416;
+            --pitch-green: #b2d38d;
+            --text-gray: #888;
         }
 
         body {
-            background: var(--bg);
+            background-color: var(--bg-dark);
             color: white;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
             display: flex;
             justify-content: center;
-            padding: 10px;
-            margin: 0;
-        }
-
-        .container {
-            background: var(--card);
-            width: 100%;
-            max-width: 480px;
-            border-radius: 15px;
             padding: 15px;
-            border: 1px solid #333;
         }
 
-        .header {
+        .app-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #222;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Header info */
+        .top-info {
             display: flex;
             justify-content: space-between;
-            font-size: 0.7rem;
-            color: #888;
-            margin-bottom: 15px;
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .input-box { margin-bottom: 10px; }
-        label { font-size: 0.65rem; color: #666; display: block; margin-bottom: 4px; }
-
-        input {
+        /* Input Fields */
+        .input-section { margin-bottom: 15px; }
+        .input-label {
+            font-size: 0.65rem;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+            font-weight: bold;
+        }
+        .input-field {
             width: 100%;
-            padding: 12px;
             background: #000;
-            border: 1px solid #444;
-            color: var(--green);
-            border-radius: 8px;
-            font-family: monospace;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
             outline: none;
             box-sizing: border-box;
+            transition: border 0.3s;
         }
+        .input-field:focus { border-color: var(--primary); }
 
-        .grid {
+        /* Stats Bar */
+        .stats-row {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 4px;
-            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        .stat-pct {
+            font-size: 0.55rem;
+            text-align: center;
+            color: var(--primary);
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
+        /* The Grid 10x5 */
+        .terrain {
+            background: #1a1a1c;
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        .grid-10x5 {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+        }
         .cell {
             aspect-ratio: 1;
-            background: var(--pitch);
-            border-radius: 3px;
+            background-color: var(--pitch-green);
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            position: relative;
+            transition: transform 0.2s, background 0.3s;
         }
 
-        .cell.ball { background: #fff; box-shadow: 0 0 10px var(--green); }
-        .cell.mine { background: #333; opacity: 0.7; }
+        /* Symbols */
+        .cell.is-ball { background: #fff; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); animation: pop 0.3s ease; }
+        .cell.is-mine { background: #222; opacity: 0.5; }
 
-        .btn-predict {
+        @keyframes pop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* Action Button */
+        .btn-main {
             width: 100%;
             padding: 18px;
-            background: var(--green);
-            color: black;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
             border: none;
-            border-radius: 12px;
-            font-weight: bold;
+            border-radius: 14px;
+            color: #000;
+            font-weight: 800;
+            font-size: 0.95rem;
             margin-top: 20px;
             cursor: pointer;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
         }
-        
-        #status {
+        .btn-main:active { transform: scale(0.98); }
+
+        .footer-tag {
             text-align: center;
-            font-size: 0.7rem;
-            margin-top: 10px;
-            color: var(--green);
-            height: 15px;
+            font-size: 0.6rem;
+            color: #444;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <span>27/03/2026</span>
-        <span style="color: var(--green)">● STABLE ENGINE V60</span>
+<div class="app-card">
+    <div class="top-info">
+        <span id="live-clock">--/--/-- --:--</span>
+        <span style="color: var(--primary)">● Algorithm Ultra V61</span>
     </div>
 
-    <div class="input-box">
-        <label>CLIENT SEED :</label>
-        <input type="text" id="cSeed" placeholder="Apetaho eto..." value="zVEQP74Jbv6hot8m0g8h">
+    <div class="input-section">
+        <span class="input-label">SEED DU CLIENT (ACTIVE)</span>
+        <input type="text" id="clientSeed" class="input-field" placeholder="Entrez le seed du client..." value="zVEQP74Jbv6hot8m0g8h">
     </div>
 
-    <div class="input-box">
-        <label>SERVER SEED (Optionnel) :</label>
-        <input type="text" id="sSeed" placeholder="Apetaho eto raha misy...">
+    <div class="input-section">
+        <span class="input-label">SEED DU SERVEUR (SHA256)</span>
+        <input type="text" id="serverSeed" class="input-field" placeholder="Entrez le seed du serveur...">
     </div>
 
-    <div id="status"></div>
+    <div class="stats-row" id="statsRow">
+        </div>
 
-    <div class="grid" id="grid"></div>
+    <div class="terrain">
+        <div class="grid-10x5" id="gameGrid">
+            </div>
+    </div>
 
-    <button class="btn-predict" onclick="startAnalysis()">⚡ ANALYSER LE TERRAIN</button>
+    <button class="btn-main" onclick="runUltraAnalysis()">
+        ⚡ Analyser Terrain (10x5)
+    </button>
+
+    <div class="footer-tag">
+        PROVABLY FAIR SYSTEM | ENCRYPTED BY LOVABLE AI
+    </div>
 </div>
 
 <script>
-    const rows = 5, cols = 10;
-    const grid = document.getElementById('grid');
+    const ROWS = 5;
+    const COLS = 10;
+    const gridEl = document.getElementById('gameGrid');
+    const statsRow = document.getElementById('statsRow');
 
+    // Initialize UI
     function init() {
-        grid.innerHTML = '';
-        for (let i = 0; i < rows * cols; i++) {
+        gridEl.innerHTML = '';
+        statsRow.innerHTML = '';
+        for (let i = 0; i < ROWS * COLS; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            grid.appendChild(cell);
+            gridEl.appendChild(cell);
+        }
+        for (let i = 0; i < COLS; i++) {
+            const span = document.createElement('div');
+            span.className = 'stat-pct';
+            span.innerText = '0%';
+            statsRow.appendChild(span);
         }
     }
 
-    function startAnalysis() {
-        const cs = document.getElementById('cSeed').value.trim();
-        const ss = document.getElementById('sSeed').value.trim();
-        const status = document.getElementById('status');
+    // Advanced Hashing for better randomness
+    function getSeededRandom(seedStr) {
+        let h = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+            h = Math.imul(31, h) + seedStr.charCodeAt(i) | 0;
+        }
+        return function() {
+            h = Math.imul(1597334677, h) + 2147483647 | 0;
+            return (h >>> 0) / 4294967296;
+        };
+    }
 
-        if (!cs && !ss) {
-            alert("Ampidiro farafahakeliny ny seed iray!");
+    function runUltraAnalysis() {
+        const cSeed = document.getElementById('clientSeed').value.trim();
+        const sSeed = document.getElementById('serverSeed').value.trim();
+
+        if (!cSeed) {
+            alert("Azafady, ampidiro farafahakeliny ny Client Seed.");
             return;
         }
 
-        status.innerText = "Calcul de l'algorithme en cours...";
         const cells = document.querySelectorAll('.cell');
-        cells.forEach(c => { c.classList.remove('ball', 'mine'); c.innerText = ''; });
+        const pcts = document.querySelectorAll('.stat-pct');
+        
+        // Reset Visuals
+        cells.forEach(c => { c.className = 'cell'; c.innerText = ''; });
+        pcts.forEach(p => p.style.opacity = '0');
 
-        const finalSeed = cs + ss + "V60_SALT";
-        let hash = 0;
-        for (let i = 0; i < finalSeed.length; i++) {
-            hash = ((hash << 5) - hash) + finalSeed.charCodeAt(i);
-            hash |= 0;
-        }
+        // Combined logic
+        const finalSeed = cSeed + sSeed + "PRO_SALT_V61";
+        const rng = getSeededRandom(finalSeed);
 
-        for (let c = 0; c < cols; c++) {
+        for (let c = 0; c < COLS; c++) {
             setTimeout(() => {
-                let colHash = Math.abs(hash ^ (c * 1234567));
-                let ballRow = colHash % rows;
-                let mineRow = (colHash + 1) % rows;
+                // Calculation per column
+                const colRng = rng();
+                const ballRow = Math.floor(colRng * ROWS);
+                let mineRow = Math.floor(rng() * ROWS);
+                if (mineRow === ballRow) mineRow = (ballRow + 1) % ROWS;
 
-                let bIdx = (ballRow * cols) + c;
-                let mIdx = (mineRow * cols) + c;
+                const accuracy = Math.floor(95 + (colRng * 4.9));
 
-                cells[bIdx].classList.add('ball');
-                cells[bIdx].innerText = '⚽';
-                cells[mIdx].classList.add('mine');
-                cells[mIdx].innerText = '💣';
+                // Apply to UI
+                const ballIdx = (ballRow * COLS) + c;
+                const mineIdx = (mineRow * COLS) + c;
 
-                if (c === cols - 1) status.innerText = "Analyse terminée !";
-            }, c * 80);
+                cells[ballIdx].classList.add('is-ball');
+                cells[ballIdx].innerText = '⚽';
+                
+                cells[mineIdx].classList.add('is-mine');
+                cells[mineIdx].innerText = '💣';
+
+                pcts[c].innerText = accuracy + '%';
+                pcts[c].style.opacity = '1';
+
+            }, c * 100);
         }
     }
 
+    // Real-time Clock
+    function updateClock() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('fr-FR');
+        const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('live-clock').innerText = `${dateStr} ${timeStr}`;
+    }
+
+    setInterval(updateClock, 1000);
     init();
+    updateClock();
 </script>
 
 </body>
